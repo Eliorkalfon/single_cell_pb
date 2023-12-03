@@ -1,6 +1,6 @@
-# single_cell_pb
-Kaggle's Open Problems – Single-Cell Perturbations competition. 
+# Open Problems – Single-Cell Perturbations 2nd Place Solution
 
+[Kaggle's Open Problems – Single-Cell Perturbations competition. ](https://www.kaggle.com/competitions/open-problems-single-cell-perturbations/overview)
 ### Setup 
 cuda version - cu121
 python 3.8
@@ -22,7 +22,7 @@ To run the models modify config_test.yaml and run:
 python predict.py --config config_test.yaml
 ```
 ### Hardware
-nvidia rtx 3080 mobile, windows 11
+Nvidia RTX 3080 mobile
 
 
 ## Sources
