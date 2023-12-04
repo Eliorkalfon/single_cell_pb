@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 import yaml
 import pickle
 from torch.utils.data import TensorDataset, DataLoader
-
+from models import *
 
 # Evaluate the loaded model on the test data
 def evaluate_model(model, dataloader, criterion=None):
@@ -216,133 +216,6 @@ def plot_mrrmse(val_mrrmse):
 def save_model(model, model_path):
     torch.save(model.state_dict(), model_path)
 
-
-# Model Architecture
-class CustomTransformer(nn.Module):
-    def __init__(self, num_features, num_labels, d_model=128, num_heads=8, num_layers=6):  # num_heads=8
-        super(CustomTransformer, self).__init__()
-        self.embedding = nn.Linear(num_features, d_model)
-        # Embedding layer for sparse features
-        # self.embedding = nn.Embedding(num_features, d_model)
-
-        # self.norm = nn.BatchNorm1d(d_model, affine=True)
-        self.norm = nn.LayerNorm(d_model)
-        # self.transformer = nn.Transformer(d_model=d_model, nhead=num_heads, num_encoder_layers=num_layers,
-        #                                 dropout=0.1, device='cuda')
-        self.transformer = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=d_model, nhead=num_heads, device='cuda', dropout=0.3,
-                                       activation=nn.GELU(),
-                                       batch_first=True), enable_nested_tensor=True, num_layers=num_layers
-        )
-        # Dropout layer for regularization
-        # self.dropout = nn.Dropout(0.2)
-        self.fc = nn.Linear(d_model, num_labels)
-
-    def forward(self, x):
-        x = self.embedding(x)
-
-        # x = (self.transformer(x,x))
-        x = self.transformer(x)
-        x = self.norm(x)
-        # x = self.fc(self.dropout(x))
-        x = self.fc(x)
-        return x
-
-
-class CustomTransformer_v3(nn.Module):  # mean + std
-    def __init__(self, num_features, num_labels, d_model=128, num_heads=8, num_layers=6, dropout=0.3):
-        super(CustomTransformer_v3, self).__init__()
-        self.num_target_encodings = 18211 * 4
-        self.num_sparse_features = num_features - self.num_target_encodings
-
-        self.sparse_feature_embedding = nn.Linear(self.num_sparse_features, d_model)
-        self.target_encoding_embedding = nn.Linear(self.num_target_encodings, d_model)
-        self.norm = nn.LayerNorm(d_model)
-
-        self.concatenation_layer = nn.Linear(2 * d_model, d_model)
-        self.transformer = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=d_model, nhead=num_heads, dropout=dropout, activation=nn.GELU(),
-                                       batch_first=True),
-            num_layers=num_layers
-        )
-        self.fc = nn.Linear(d_model, num_labels)
-
-    def forward(self, x):
-        sparse_features = x[:, :self.num_sparse_features]
-        target_encodings = x[:, self.num_sparse_features:]
-
-        sparse_features = self.sparse_feature_embedding(sparse_features)
-        target_encodings = self.target_encoding_embedding(target_encodings)
-
-        combined_features = torch.cat((sparse_features, target_encodings), dim=1)
-        combined_features = self.concatenation_layer(combined_features)
-        combined_features = self.norm(combined_features)
-
-        x = self.transformer(combined_features)
-        x = self.norm(x)
-
-        x = self.fc(x)
-        return x
-
-
-class CustomTransformer_V2(nn.Module):  # v2 mean only
-    def __init__(self, num_features, num_labels, d_model=128, num_heads=8, num_layers=6, dropout=0.1):
-        super(CustomTransformer_V2, self).__init__()
-        self.num_target_encodings = 18211  # *2 #each one for each type (cell or drug)
-        self.num_sparse_features = num_features - 2 * self.num_target_encodings
-
-        self.target_encoding_embedding_a = nn.Linear(self.num_target_encodings, d_model)
-        self.target_encoding_embedding_b = nn.Linear(self.num_target_encodings, d_model)
-
-        self.norm = nn.LayerNorm(d_model)
-
-        self.concatenation_layer = nn.Linear((self.num_sparse_features + 2 * d_model), d_model)
-        self.transformer = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d_model=d_model, nhead=num_heads,
-                                       dropout=dropout, activation=nn.GELU(), batch_first=True),
-            num_layers=num_layers
-        )
-        self.fc = nn.Linear(d_model, num_labels)
-
-    def forward(self, x):
-        # No need for embedding or mean pooling for one-hot encoded sparse features
-        # Simply concatenate the one-hot encoded sparse features with target_encodings
-        x = torch.cat(
-            (x[:, :self.num_sparse_features],
-             self.target_encoding_embedding_a(
-                 x[:, self.num_sparse_features:self.num_target_encodings + self.num_sparse_features]),
-             self.target_encoding_embedding_b(x[:, self.num_target_encodings + self.num_sparse_features:])), dim=1)
-        x = self.concatenation_layer(x)
-        x = self.norm(x)
-
-        x = self.transformer(x)
-        x = self.norm(x)
-
-        x = self.fc(x)
-        return x
-
-
-class CustomDeeperModel(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, num_layers=6, dropout=0.3, layer_norm=True):
-        super(CustomDeeperModel, self).__init__()
-        layers = []
-
-        for _ in range(num_layers):
-            if layer_norm:
-                layers.append(nn.LayerNorm(input_dim))
-            layers.append(nn.Linear(input_dim, hidden_dim))
-            layers.append(nn.ReLU())
-            if dropout > 0:
-                layers.append(nn.Dropout(p=dropout))
-            input_dim = hidden_dim
-
-        self.model = nn.Sequential(*layers)
-        self.fc = nn.Linear(hidden_dim, output_dim)
-
-    def forward(self, x):
-        x = self.model(x)
-        x = self.fc(x)
-        return x
 
 
 # For evaluation
