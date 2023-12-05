@@ -1,0 +1,6 @@
+# Ignore pickled files
+*.pkl
+
+# Ignore PyTorch model files
+*.pth
+*.pt

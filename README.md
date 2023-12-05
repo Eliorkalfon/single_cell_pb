@@ -23,6 +23,8 @@ python predict.py --config config_test.yaml
 ```
 ### Hardware
 Nvidia RTX 3080 mobile
+Windows 11
+11th Gen Intel(R) Core(TM) i7-11800H
 
 
 ## Sources

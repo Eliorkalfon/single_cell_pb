@@ -267,6 +267,8 @@ def main():
     one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
                                                                             id_map_file=id_map_file)
 
+    # one_hot_encode_features, targets, one_hot_test = prepare_augmented_data_mean_only(data_file=data_file,
+    #                                                                         id_map_file=id_map_file)
     if sampling_strategy == 'k-means':
         train_k_means_strategy(n_components_list, d_models_list, one_hot_encode_features, targets, num_epochs,
                                early_stopping, batch_size, device)

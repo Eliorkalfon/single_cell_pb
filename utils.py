@@ -147,6 +147,68 @@ def prepare_augmented_data(
     return X0.astype(np.float32).to_numpy(), y0, test0.astype(np.float32).to_numpy()
 
 
+def prepare_augmented_data_mean_only(
+        data_file="",
+        id_map_file=""):
+    de_train = pd.read_parquet(data_file)
+    id_map = pd.read_csv(id_map_file)
+    xlist = ['cell_type', 'sm_name']
+    _ylist = ['cell_type', 'sm_name', 'sm_lincs_id', 'SMILES', 'control']
+    y = de_train.drop(columns=_ylist)
+    # train = pd.get_dummies(de_train[xlist], columns=xlist)
+    # test = pd.get_dummies(id_map[xlist], columns=xlist)
+    # Combine train and test data for one-hot encoding
+    combined_data = pd.concat([de_train[xlist], id_map[xlist]])
+
+    dum_data = pd.get_dummies(combined_data, columns=xlist)
+
+    # Split the combined data back into train and test
+    train = dum_data.iloc[:len(de_train)]
+    test = dum_data.iloc[len(de_train):]
+    # uncommon = [f for f in train if f not in test]
+    # X = train.drop(columns=uncommon)
+
+    X = train
+    de_cell_type = de_train.iloc[:, [0] + list(range(5, de_train.shape[1]))]
+    de_sm_name = de_train.iloc[:, [1] + list(range(5, de_train.shape[1]))]
+    mean_cell_type = de_cell_type.groupby('cell_type').mean().reset_index()
+    mean_sm_name = de_sm_name.groupby('sm_name').mean().reset_index()
+    rows = []
+    for name in de_cell_type['cell_type']:
+        mean_rows = mean_cell_type[mean_cell_type['cell_type'] == name].copy()
+        rows.append(mean_rows)
+    tr_cell_type = pd.concat(rows)
+    tr_cell_type = tr_cell_type.reset_index(drop=True)
+
+    rows = []
+    for name in de_sm_name['sm_name']:
+        mean_rows = mean_sm_name[mean_sm_name['sm_name'] == name].copy()
+        rows.append(mean_rows)
+    tr_sm_name = pd.concat(rows)
+    tr_sm_name = tr_sm_name.reset_index(drop=True)
+
+    rows = []
+    for name in id_map['cell_type']:
+        mean_rows = mean_cell_type[mean_cell_type['cell_type'] == name].copy()
+        rows.append(mean_rows)
+
+    te_cell_type = pd.concat(rows)
+    te_cell_type = te_cell_type.reset_index(drop=True)
+    rows = []
+    for name in id_map['sm_name']:
+        mean_rows = mean_sm_name[mean_sm_name['sm_name'] == name].copy()
+        rows.append(mean_rows)
+
+    te_sm_name = pd.concat(rows)
+    te_sm_name = te_sm_name.reset_index(drop=True)
+    X0 = X.join(tr_cell_type.iloc[:, 1:]).copy()
+    X0 = X0.join(tr_sm_name.iloc[:, 1:], lsuffix='_cell_type', rsuffix='_sm_name')
+    y0 = y.iloc[:, :].copy()
+    test0 = test.join(te_cell_type.iloc[:, 1:]).copy()
+    test0 = test0.join(te_sm_name.iloc[:, 1:], lsuffix='_cell_type', rsuffix='_sm_name')
+    return X0.astype(np.float32).to_numpy(), y0, test0.astype(np.float32).to_numpy()
+
+
 def load_and_print_config(config_file):
     # Load configurations from the YAML file
     config = load_config(config_file)

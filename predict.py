@@ -53,14 +53,17 @@ def main():
     n_components_list = config.get('n_components_list', [])
     d_models_list = config.get('d_models_list', [])  # embedding dimensions for the transformer models
     batch_size = config.get('batch_size', 32)
-    sampling_strategy = config.get('sampling_strategy', 'random')
     data_file = config.get('data_file', '')
     id_map_file = config.get('id_map_file', '')
     device = config.get('device', 'cuda')
-
+    models_dir = config.get('dir', 'model_1_mean_std_only')
     # Prepare augmented data
-    one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
-                                                                            id_map_file=id_map_file)
+    if 'std' in models_dir:
+        one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
+                                                                                id_map_file=id_map_file)
+    else:
+        one_hot_encode_features, targets, one_hot_test = prepare_augmented_data_mean_only(data_file=data_file,
+                                                                                        id_map_file=id_map_file)
     unseen_data = torch.tensor(one_hot_test, dtype=torch.float32).to(device)  # Replace X_unseen with your new data
     transformer_models = {}
     for n_components in n_components_list:
@@ -70,7 +73,7 @@ def main():
                                                                               one_hot_encode_features.shape[
                                                                                   1],
                                                                               d_model=d_model,
-                                                                              models_foler=f'trained_models_{sampling_strategy}',
+                                                                              models_foler=f'{models_dir}',
                                                                               device=device)
             transformer_model.eval()
             transformer_models[f'{n_components},{d_model}'] = (

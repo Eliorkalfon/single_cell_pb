@@ -3,8 +3,8 @@ n_components_list: # targets dimension list
 d_models_list:
   - 128
 batch_size: 32
-sampling_strategy: k-means  # Choose either 'k-means' or 'random'
 data_file: ''
 id_map_file: ''
 device: cuda
 seed: null
+models_dir: ''
