@@ -21,8 +21,12 @@ To run the models modify config_test.yaml and run:
 ```bash
 python predict.py --config config_test.yaml
 ```
+
+Make sure you have a file names sample_submission.csv which is the same
+as the resulted dataframe but filled with zeros.
+
 ### Hardware
-Nvidia RTX 3080 mobile
+1x Nvidia RTX 3080 mobile
 Windows 11
 11th Gen Intel(R) Core(TM) i7-11800H
 

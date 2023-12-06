@@ -24,7 +24,7 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
             # Stack the combined outputs
             combined_outputs = torch.stack(combined_outputs, dim=0)
             sample_submission = pd.read_csv(
-                f"\kaggle_data\sample_submission.csv")
+                f"\sample_submission.csv")
             sample_columns = sample_submission.columns
             sample_columns = sample_columns[1:]
             submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy(), columns=sample_columns)
