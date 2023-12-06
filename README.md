@@ -29,7 +29,7 @@ as the resulted dataframe but filled with zeros.
 1x Nvidia RTX 3080 mobile
 Windows 11
 11th Gen Intel(R) Core(TM) i7-11800H
-
+ 
 
 ## Sources
 1. [Single Cell Perturbations Kaggle 2nd place solution](https://www.kaggle.com/competitions/open-problems-single-cell-perturbations/discussion/458738)
