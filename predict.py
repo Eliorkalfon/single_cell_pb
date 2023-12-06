@@ -3,7 +3,6 @@ import copy
 
 import argparse
 
-
 @torch.no_grad()
 def predict_test(data, models, n_components_list, d_list, batch_size, device='cuda'):
     num_samples = len(data)
@@ -19,17 +18,17 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
             if scaler:
                 transformed_data = torch.tensor(scaler.inverse_transform(
                     label_reducer.inverse_transform(transformed_data.cpu().detach().numpy()))).to(device)
-                combined_outputs.append(transformed_data)
+            combined_outputs.append(transformed_data)
 
-                # Stack the combined outputs
-                combined_outputs = torch.stack(combined_outputs, dim=0)
-                sample_submission = pd.read_csv(
-                    r"\kaggle_data\\sample_submission.csv")
-                sample_columns = sample_submission.columns
-                sample_columns = sample_columns[1:]
-                submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy(), columns=sample_columns)
-                submission_df.insert(0, 'id', range(255))
-                submission_df.to_csv(f"result_{n_components}_{d_model}.csv", index=False)
+        # Stack the combined outputs
+        combined_outputs = torch.stack(combined_outputs, dim=0)
+        sample_submission = pd.read_csv(
+            f"\kaggle_data\sample_submission_{n_components}_{d_model}.csv")
+        sample_columns = sample_submission.columns
+        sample_columns = sample_columns[1:]
+        submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy(), columns=sample_columns)
+        submission_df.insert(0, 'id', range(255))
+        submission_df.to_csv(f"result_{n_components}_{d_model}.csv", index=False)
 
     return
 
