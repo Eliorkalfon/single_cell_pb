@@ -3,6 +3,7 @@ import copy
 
 import argparse
 
+
 @torch.no_grad()
 def predict_test(data, models, n_components_list, d_list, batch_size, device='cuda'):
     num_samples = len(data)
@@ -23,7 +24,7 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
         # Stack the combined outputs
         combined_outputs = torch.stack(combined_outputs, dim=0)
         sample_submission = pd.read_csv(
-            f"\kaggle_data\sample_submission_{n_components}_{d_model}.csv")
+            f"\kaggle_data\sample_submission.csv")
         sample_columns = sample_submission.columns
         sample_columns = sample_columns[1:]
         submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy(), columns=sample_columns)
@@ -62,7 +63,7 @@ def main():
                                                                                 id_map_file=id_map_file)
     else:
         one_hot_encode_features, targets, one_hot_test = prepare_augmented_data_mean_only(data_file=data_file,
-                                                                                        id_map_file=id_map_file)
+                                                                                          id_map_file=id_map_file)
     unseen_data = torch.tensor(one_hot_test, dtype=torch.float32).to(device)  # Replace X_unseen with your new data
     transformer_models = {}
     for n_components in n_components_list:
