@@ -5,7 +5,7 @@
 cuda version - cu121
 python 3.8
 ```bash
-pip install -r  requirements.py
+pip install -r  requirements.txt
 ```
 
 
