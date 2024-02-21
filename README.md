@@ -12,7 +12,7 @@ pip install -r  requirements.py
 To train the models modify config_train.yaml and run:
 
 ```bash
-python train_run.py --config config_train.yaml
+python train.py --config config_train.yaml
 ```
 
 
