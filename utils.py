@@ -37,18 +37,18 @@ def evaluate_model(model, dataloader, criterion=None):
     return total_mrrmse.detach().cpu().item(), running_loss / num_batches
 
 
-def load_transformer_model(n_components, input_features, d_model, models_foler='trained_models', device='cuda'):
+def load_transformer_model(n_components, input_features, d_model, models_folder='trained_models', device='cuda'):
     # transformer_model = CustomTransformer(num_features=input_features, num_labels=n_components, d_model=d_model).to(
     #     device)
     transformer_model = CustomTransformer_v3(num_features=input_features, num_labels=n_components, d_model=d_model).to(
         device)
     # transformer_model = CustomDeeperModel(input_features, d_model, n_components).to(device)
-    transformer_model.load_state_dict(torch.load(f'trained_models/transformer_model_{n_components}_{d_model}.pt'))
+    transformer_model.load_state_dict(torch.load(f'{models_folder}/transformer_model_{n_components}_{d_model}.pt'))
     transformer_model.eval()
     if n_components == 18211:
         return None, None, transformer_model
-    label_reducer = pickle.load(open(f'{models_foler}/label_reducer_{n_components}_{d_model}.pkl', 'rb'))
-    scaler = pickle.load(open(f'{models_foler}/scaler_{n_components}_{d_model}.pkl', 'rb'))
+    label_reducer = pickle.load(open(f'{models_folder}/label_reducer_{n_components}_{d_model}.pkl', 'rb'))
+    scaler = pickle.load(open(f'{models_folder}/scaler_{n_components}_{d_model}.pkl', 'rb'))
     return label_reducer, scaler, transformer_model
 
 
