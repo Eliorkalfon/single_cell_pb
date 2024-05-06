@@ -127,7 +127,7 @@ def train_func(X_train, Y_reduced, X_val, Y_val, n_components, num_epochs, batch
         pbar.update(1)
         # scheduler.step()  # for cosine anealing
         scheduler.step(val_loss)
-    return label_reducer, scaler, best_model
+    return best_model
 
 
 def train_transformer_k_means_learning(X, Y, n_components, num_epochs, batch_size,
