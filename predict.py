@@ -24,10 +24,10 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
             # Stack the combined outputs
             combined_outputs = torch.stack(combined_outputs, dim=0)
             sample_submission = pd.read_csv(
-                f"\sample_submission.csv")
+                f"sample_submission.csv")
             sample_columns = sample_submission.columns
             sample_columns = sample_columns[1:]
-            submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy(), columns=sample_columns)
+            submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy()[0], columns=sample_columns)
             submission_df.insert(0, 'id', range(255))
             submission_df.to_csv(f"result_{n_components}_{d_model}.csv", index=False)
 
@@ -56,7 +56,8 @@ def main():
     data_file = config.get('data_file', '')
     id_map_file = config.get('id_map_file', '')
     device = config.get('device', 'cuda')
-    models_dir = config.get('dir', 'model_1_mean_std_only')
+    models_dir = config.get('models_dir', '/single_cell_pb-main/trained_models_random_std') #make sure to remove std if you want to load models with mean only
+    print(models_dir)
     # Prepare augmented data
     if 'std' in models_dir:
         one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
@@ -73,7 +74,7 @@ def main():
                                                                               one_hot_encode_features.shape[
                                                                                   1],
                                                                               d_model=d_model,
-                                                                              models_foler=f'{models_dir}',
+                                                                              models_folder=f'{models_dir}',
                                                                               device=device)
             transformer_model.eval()
             transformer_models[f'{n_components},{d_model}'] = (
