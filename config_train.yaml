@@ -3,11 +3,12 @@ n_components_list: # targets dimension list
 d_models_list:
   - 128
 batch_size: 32
-sampling_strategy: k-means  # Choose either 'k-means' or 'random'
-data_file: ''
-id_map_file: ''
+sampling_strategy: random  # Choose either 'k-means' or 'random'
+data_file: 'de_train.parquet'
+id_map_file: 'id_map.csv'
 validation_percentage: 0.1
 device: cuda
 seed: null
-num_epochs: 20000
+num_epochs: 10000
 early_stopping: 5000
+mean_std: mean # mean_std mean
