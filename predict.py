@@ -13,9 +13,12 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
             combined_outputs = []
             label_reducer, scaler, transformer_model = models[f'{n_components},{d_model}']
             transformer_model.eval()
-            for i in range(0, num_samples+batch_size, batch_size):
+            transformed_data = []
+            for i in range(0, num_samples, batch_size):
                 batch_unseen_data = data[i:i + batch_size]
-                transformed_data = transformer_model(batch_unseen_data)
+                batch_result = transformer_model(batch_unseen_data)
+                transformed_data.append(batch_result)
+            transformed_data = torch.vstack(transformed_data)
             if scaler:
                 transformed_data = torch.tensor(scaler.inverse_transform(
                     label_reducer.inverse_transform(transformed_data.cpu().detach().numpy()))).to(device)
@@ -27,7 +30,7 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
         f"sample_submission.csv")
     sample_columns = sample_submission.columns
     sample_columns = sample_columns[1:]
-    submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy()[0], columns=sample_columns)
+    submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy().mean(0), columns=sample_columns)
     submission_df.insert(0, 'id', range(255))
     submission_df.to_csv(f"result_{n_components}_{d_model}.csv", index=False)
 
