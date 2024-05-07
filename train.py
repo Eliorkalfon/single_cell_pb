@@ -221,15 +221,15 @@ def train_non_k_means_strategy(n_components_list, d_models_list, one_hot_encode_
                                            device=device)
 
             # Save the trained models
-            os.makedirs('trained_models_k-means', exist_ok=True)
-            with open(f'trained_models_k-means/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
+            os.makedirs('trained_models_non_k_means', exist_ok=True)
+            with open(f'trained_models_non_k_means/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(label_reducer, file)
 
-            with open(f'trained_models_k-means/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
+            with open(f'trained_models_non_k_means/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(scaler, file)
 
             torch.save(transformer_model.state_dict(),
-                       f'trained_models_k-means/transformer_model_{n_components}_{d_model}.pt')
+                       f'trained_models_non_k_means/transformer_model_{n_components}_{d_model}.pt')
 
 
 def main():
