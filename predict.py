@@ -60,9 +60,11 @@ def main():
     id_map_file = config.get('id_map_file', '')
     device = config.get('device', 'cuda')
     models_dir = config.get('models_dir', 'trained_models_non_k_means_std') #make sure to remove std if you want to load models with mean only
+    mean_std = config.get('mean_std', 'mean_std') #make sure to remove std if you want to load models with mean only
+
     print(models_dir)
     # Prepare augmented data
-    if 'std' in models_dir:
+    if mean_std=='mean_std':
         one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
                                                                                 id_map_file=id_map_file)
     else:
@@ -78,7 +80,7 @@ def main():
                                                                                   1],
                                                                               d_model=d_model,
                                                                               models_folder=f'{models_dir}',
-                                                                              device=device)
+                                                                              device=device,mean_std=mean_std)
             transformer_model.eval()
             transformer_models[f'{n_components},{d_model}'] = (
                 copy.deepcopy(label_reducer), copy.deepcopy(scaler), copy.deepcopy(transformer_model))
