@@ -5,7 +5,7 @@ from torch.nn.utils import clip_grad_norm_
 from tqdm import tqdm
 import pickle
 import argparse
-from models import CustomTransformer_v3  # Can be changed to other models in models.py
+from models import CustomTransformer_mean_std, CustomTransformer_mean  # Can be changed to other models in models.py
 import os
 
 
@@ -56,13 +56,19 @@ def validate_sampling_strategy(sampling_strategy):
 
 
 def train_func(X_train, Y_reduced, X_val, Y_val, n_components, num_epochs, batch_size, label_reducer, scaler,
-               d_model=128, early_stopping=5000, device='cuda', ):
+               d_model=128, early_stopping=5000, device='cuda', mean_std=
+               'mean_std'):
     best_mrrmse = float('inf')
     best_model = None
     best_val_loss = float('inf')
     best_epoch = 0
     # model = CustomTransformer(num_features=X_train.shape[1], num_labels=n_components, d_model=d_model).to(device)
-    model = CustomTransformer_v3(num_features=X_train.shape[1], num_labels=n_components, d_model=d_model).to(device)
+    if mean_std == 'mean_std':
+        model = CustomTransformer_mean_std(num_features=X_train.shape[1], num_labels=n_components, d_model=d_model).to(
+            device)
+    elif mean_std == 'mean':
+        model = CustomTransformer_mean(num_features=X_train.shape[1], num_labels=n_components, d_model=d_model).to(
+            device)
     # model = CustomDeeperModel(X_train.shape[1], d_model, n_components).to(device)
 
     dataset = TensorDataset(torch.tensor(X_train, dtype=torch.float32).to(device),
@@ -131,7 +137,7 @@ def train_func(X_train, Y_reduced, X_val, Y_val, n_components, num_epochs, batch
 
 
 def train_transformer_k_means_learning(X, Y, n_components, num_epochs, batch_size,
-                                       d_model=128, early_stopping=5000, device='cuda', seed=18):
+                                       d_model=128, early_stopping=5000, device='cuda', seed=18, mean_std='mean_std'):
     label_reducer, scaler, Y_reduced = reduce_labels(Y, n_components)
     Y_reduced = Y_reduced.to_numpy()
     Y = Y.to_numpy()
@@ -170,13 +176,13 @@ def train_transformer_k_means_learning(X, Y, n_components, num_epochs, batch_siz
     X_train, Y_train = np.array(X_train), np.array(Y_train)
     X_val, Y_val = np.array(X_val), np.array(Y_val)
     transfromer_model = train_func(X_train, Y_train, X_val, Y_val, n_components, num_epochs, batch_size,
-                                   label_reducer, scaler, d_model, early_stopping, device)
+                                   label_reducer, scaler, d_model, early_stopping, device, mean_std)
 
     return label_reducer, scaler, transfromer_model
 
 
 def train_k_means_strategy(n_components_list, d_models_list, one_hot_encode_features, targets, num_epochs,
-                           early_stopping, batch_size, device):
+                           early_stopping, batch_size, device, mean_std):
     # Training loop for k_means sampling strategy
     for n_components in n_components_list:
         for d_model in d_models_list:
@@ -187,13 +193,13 @@ def train_k_means_strategy(n_components_list, d_models_list, one_hot_encode_feat
                 num_epochs=num_epochs,
                 early_stopping=early_stopping,
                 batch_size=batch_size,
-                d_model=d_model, device=device)
-            os.makedirs('trained_models_k_means', exist_ok=True)
+                d_model=d_model, device=device, mean_std=mean_std)
+            os.makedirs(f'trained_models_k_means_{mean_std}', exist_ok=True)
             # Save the trained models
-            with open(f'trained_models_k_means/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
+            with open(f'trained_models_k_means_{mean_std}/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(label_reducer, file)
 
-            with open(f'trained_models_k_means/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
+            with open(f'trained_models_k_means_{mean_std}/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(scaler, file)
 
             torch.save(transformer_model.state_dict(),
@@ -201,7 +207,7 @@ def train_k_means_strategy(n_components_list, d_models_list, one_hot_encode_feat
 
 
 def train_non_k_means_strategy(n_components_list, d_models_list, one_hot_encode_features, targets, num_epochs,
-                               early_stopping, batch_size, device, seed, validation_percentage):
+                               early_stopping, batch_size, device, seed, validation_percentage,mean_std):
     # Split the data for non-k_means sampling strategy
     X_train, X_val, y_train, y_val = split_data(one_hot_encode_features, targets, test_size=validation_percentage,
                                                 shuffle=True, random_state=seed)
@@ -218,18 +224,18 @@ def train_non_k_means_strategy(n_components_list, d_models_list, one_hot_encode_
                                            d_model=d_model,
                                            label_reducer=label_reducer,
                                            scaler=scaler,
-                                           device=device)
+                                           device=device,mean_std=mean_std)
 
             # Save the trained models
-            os.makedirs('trained_models_non_k_means', exist_ok=True)
-            with open(f'trained_models_non_k_means/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
+            os.makedirs(f'trained_models_non_k_means_{mean_std}', exist_ok=True)
+            with open(f'trained_models_non_k_means_{mean_std}/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(label_reducer, file)
 
-            with open(f'trained_models_non_k_means/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
+            with open(f'trained_models_non_k_means_{mean_std}/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(scaler, file)
 
             torch.save(transformer_model.state_dict(),
-                       f'trained_models_non_k_means/transformer_model_{n_components}_{d_model}.pt')
+                       f'trained_models_non_k_means_{mean_std}/transformer_model_{n_components}_{d_model}.pt')
 
 
 def main():
@@ -259,22 +265,23 @@ def main():
     seed = config.get('seed', None)
     num_epochs = config.get('num_epochs', 20000)
     early_stopping = config.get('early_stopping', 5000)
-
+    mean_std = config.get('mean_std', 'mean_std')
     # Validate the sampling strategy
     validate_sampling_strategy(sampling_strategy)
 
     # Prepare augmented data
-    one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
-                                                                            id_map_file=id_map_file)
-
-    # one_hot_encode_features, targets, one_hot_test = prepare_augmented_data_mean_only(data_file=data_file,
-    #                                                                         id_map_file=id_map_file)
+    if mean_std == 'mean_std':
+        one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
+                                                                                id_map_file=id_map_file)
+    elif mean_std == 'mean':
+        one_hot_encode_features, targets, one_hot_test = prepare_augmented_data_mean_only(data_file=data_file,
+                                                                                          id_map_file=id_map_file)
     if sampling_strategy == 'k-means':
         train_k_means_strategy(n_components_list, d_models_list, one_hot_encode_features, targets, num_epochs,
-                               early_stopping, batch_size, device)
+                               early_stopping, batch_size, device, mean_std)
     else:
         train_non_k_means_strategy(n_components_list, d_models_list, one_hot_encode_features, targets, num_epochs,
-                                   early_stopping, batch_size, device, seed, validation_percentage)
+                                   early_stopping, batch_size, device, seed, validation_percentage, mean_std)
 
 
 if __name__ == "__main__":
