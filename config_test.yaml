@@ -3,8 +3,9 @@ n_components_list: # targets dimension list
 d_models_list:
   - 128
 batch_size: 32
-data_file: ''
-id_map_file: ''
+data_file: 'de_train.parquet'
+id_map_file: 'id_map.csv'
 device: cuda
 seed: null
-models_dir: ''
+models_dir: 'trained_models_non_k_means_mean'
+mean_std: "mean" #mean or mean_std
