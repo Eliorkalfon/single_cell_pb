@@ -14,6 +14,7 @@ import pickle
 from torch.utils.data import TensorDataset, DataLoader
 from models import *
 
+
 # Evaluate the loaded model on the test data
 def evaluate_model(model, dataloader, criterion=None):
     model.eval()
@@ -37,11 +38,18 @@ def evaluate_model(model, dataloader, criterion=None):
     return total_mrrmse.detach().cpu().item(), running_loss / num_batches
 
 
-def load_transformer_model(n_components, input_features, d_model, models_folder='trained_models', device='cuda'):
+def load_transformer_model(n_components, input_features, d_model, models_folder='trained_models', device='cuda',
+                           mean_std='mean_std'):
     # transformer_model = CustomTransformer(num_features=input_features, num_labels=n_components, d_model=d_model).to(
     #     device)
-    transformer_model = CustomTransformer_v3(num_features=input_features, num_labels=n_components, d_model=d_model).to(
-        device)
+    if mean_std == 'mean_std':
+        transformer_model = CustomTransformer_mean_std(num_features=input_features, num_labels=n_components,
+                                                       d_model=d_model).to(
+            device)
+    else:
+        transformer_model = CustomTransformer_mean(num_features=input_features, num_labels=n_components,
+                                                   d_model=d_model).to(
+            device)
     # transformer_model = CustomDeeperModel(input_features, d_model, n_components).to(device)
     transformer_model.load_state_dict(torch.load(f'{models_folder}/transformer_model_{n_components}_{d_model}.pt'))
     transformer_model.eval()
@@ -277,7 +285,6 @@ def plot_mrrmse(val_mrrmse):
 # Save Model
 def save_model(model, model_path):
     torch.save(model.state_dict(), model_path)
-
 
 
 # For evaluation
