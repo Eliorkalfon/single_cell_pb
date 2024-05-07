@@ -188,16 +188,16 @@ def train_k_means_strategy(n_components_list, d_models_list, one_hot_encode_feat
                 early_stopping=early_stopping,
                 batch_size=batch_size,
                 d_model=d_model, device=device)
-            os.makedirs('trained_models_random', exist_ok=True)
+            os.makedirs('trained_models_k_means', exist_ok=True)
             # Save the trained models
-            with open(f'trained_models_random/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
+            with open(f'trained_models_k_means/label_reducer_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(label_reducer, file)
 
-            with open(f'trained_models_random/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
+            with open(f'trained_models_k_means/scaler_{n_components}_{d_model}.pkl', 'wb') as file:
                 pickle.dump(scaler, file)
 
             torch.save(transformer_model.state_dict(),
-                       f'trained_models_random/transformer_model_{n_components}_{d_model}.pt')
+                       f'trained_models_k_means/transformer_model_{n_components}_{d_model}.pt')
 
 
 def train_non_k_means_strategy(n_components_list, d_models_list, one_hot_encode_features, targets, num_epochs,
