@@ -14,10 +14,11 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
             label_reducer, scaler, transformer_model = models[f'{n_components},{d_model}']
             transformer_model.eval()
             transformed_data = []
-            for i in range(0, num_samples, batch_size):
-                batch_unseen_data = data[i:i + batch_size]
+            for k in range(0, num_samples, batch_size):
+                batch_unseen_data = data[k:k + batch_size]
                 batch_result = transformer_model(batch_unseen_data)
                 transformed_data.append(batch_result)
+
             transformed_data = torch.vstack(transformed_data)
             if scaler:
                 transformed_data = torch.tensor(scaler.inverse_transform(
@@ -27,7 +28,7 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
         # Stack the combined outputs
     combined_outputs = torch.stack(combined_outputs, dim=0)
     sample_submission = pd.read_csv(
-        f"sample_submission.csv")
+        f"./data/sample_submission.csv")
     sample_columns = sample_submission.columns
     sample_columns = sample_columns[1:]
     submission_df = pd.DataFrame(combined_outputs.cpu().detach().numpy().mean(0), columns=sample_columns)
@@ -40,7 +41,7 @@ def predict_test(data, models, n_components_list, d_list, batch_size, device='cu
 def main():
     # Set up command-line argument parser
     parser = argparse.ArgumentParser(description="Your script description here.")
-    parser.add_argument('--config', type=str, help="Path to the YAML config file.", default='config_train.yaml')
+    parser.add_argument('--config', type=str, help="Path to the YAML config file.", default='config_test.yaml')
     args = parser.parse_args()
 
     # Check if the config file is provided
@@ -59,18 +60,19 @@ def main():
     data_file = config.get('data_file', '')
     id_map_file = config.get('id_map_file', '')
     device = config.get('device', 'cuda')
-    models_dir = config.get('models_dir', 'trained_models_non_k_means_std') #make sure to remove std if you want to load models with mean only
-    mean_std = config.get('mean_std', 'mean_std') #make sure to remove std if you want to load models with mean only
+    models_dir = config.get('models_dir',
+                            'trained_models_non_k_means_std')  #make sure to remove std if you want to load models with mean only
+    mean_std = config.get('mean_std', 'mean_std')  #make sure to remove std if you want to load models with mean only
 
     print(models_dir)
     # Prepare augmented data
-    if mean_std=='mean_std':
+    if mean_std == 'mean_std':
         one_hot_encode_features, targets, one_hot_test = prepare_augmented_data(data_file=data_file,
                                                                                 id_map_file=id_map_file)
     else:
         one_hot_encode_features, targets, one_hot_test = prepare_augmented_data_mean_only(data_file=data_file,
                                                                                           id_map_file=id_map_file)
-    unseen_data = torch.tensor(one_hot_test, dtype=torch.float32).to(device)  # Replace X_unseen with your new data
+    unseen_data = torch.tensor(one_hot_test, dtype=torch.float).to(device)  # Replace X_unseen with your new data
     transformer_models = {}
     for n_components in n_components_list:
         for d_model in d_models_list:
@@ -80,7 +82,7 @@ def main():
                                                                                   1],
                                                                               d_model=d_model,
                                                                               models_folder=f'{models_dir}',
-                                                                              device=device,mean_std=mean_std)
+                                                                              device=device, mean_std=mean_std)
             transformer_model.eval()
             transformer_models[f'{n_components},{d_model}'] = (
                 copy.deepcopy(label_reducer), copy.deepcopy(scaler), copy.deepcopy(transformer_model))
