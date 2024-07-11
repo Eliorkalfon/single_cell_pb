@@ -86,7 +86,7 @@ def train_func(X_train, Y_reduced, X_val, Y_val, n_components, num_epochs, batch
         lr = 1e-5
     # optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-4)
     optimizer = Lion(model.parameters(), lr=lr, weight_decay=1e-4)
-    # scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-7, verbose=False)
+    # scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=1000, eta_min=0, verbose=False)
     scheduler = lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode="min", factor=0.9999, patience=500,
                                                verbose=True)
     criterion = nn.HuberLoss()
@@ -137,7 +137,7 @@ def train_func(X_train, Y_reduced, X_val, Y_val, n_components, num_epochs, batch
 
 
 def train_transformer_k_means_learning(X, Y, n_components, num_epochs, batch_size,
-                                       d_model=128, early_stopping=5000, device='cuda', seed=18, mean_std='mean_std'):
+                                       d_model=128, early_stopping=5000, device='cuda', seed=0, mean_std='mean_std'):
     label_reducer, scaler, Y_reduced = reduce_labels(Y, n_components)
     Y_reduced = Y_reduced.to_numpy()
     Y = Y.to_numpy()
@@ -203,7 +203,7 @@ def train_k_means_strategy(n_components_list, d_models_list, one_hot_encode_feat
                 pickle.dump(scaler, file)
 
             torch.save(transformer_model.state_dict(),
-                       f'trained_models_k_means/transformer_model_{n_components}_{d_model}.pt')
+                       f'trained_models_k_means_{mean_std}/transformer_model_{n_components}_{d_model}.pt')
 
 
 def train_non_k_means_strategy(n_components_list, d_models_list, one_hot_encode_features, targets, num_epochs,
