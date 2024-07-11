@@ -291,10 +291,10 @@ def save_model(model, model_path):
 def train_and_evaluate_model(X_train, y_train, X_val, y_val, num_epochs, batch_size, learning_rate, val_loss_path):
     device = 'cuda'
 
-    X_train_tensor = torch.tensor(X_train, dtype=torch.float32).to(device)
-    y_train_tensor = torch.tensor(y_train, dtype=torch.float32).to(device)
-    X_val_tensor = torch.tensor(X_val, dtype=torch.float32).to(device)
-    y_val_tensor = torch.tensor(y_val, dtype=torch.float32).to(device)
+    X_train_tensor = torch.tensor(X_train, dtype=torch.float64).to(device)
+    y_train_tensor = torch.tensor(y_train, dtype=torch.float64).to(device)
+    X_val_tensor = torch.tensor(X_val, dtype=torch.float64).to(device)
+    y_val_tensor = torch.tensor(y_val, dtype=torch.float64).to(device)
 
     train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
@@ -315,14 +315,14 @@ def train_and_evaluate_model(X_train, y_train, X_val, y_val, num_epochs, batch_s
     # weight_decay = 1e-4
     betas = (0.9, 0.99)
     # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-    optimizer = Lion(model.parameters(), lr=learning_rate, weight_decay=1e-3, betas=betas)
+    optimizer = Lion(model.parameters(), lr=learning_rate, weight_decay=1e-4, betas=betas)
 
     val_losses = []
     val_mrrmses = []
     # scheduler = lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.999)
 
-    scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=1000, eta_min=0.0, verbose=True)
-    # scheduler = lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,mode="min",factor=0.9999, patience=250)
+    # scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=1000, eta_min=0.0, verbose=True)
+    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,mode="min",factor=0.9999, patience=250)
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
