@@ -6,7 +6,7 @@ batch_size: 32
 sampling_strategy: random  # Choose either 'k-means' or 'random'
 data_file: 'de_train.parquet'
 id_map_file: 'id_map.csv'
-validation_percentage: 0.1
+validation_percentage: 0.15
 device: cuda
 seed: null
 num_epochs: 10000
